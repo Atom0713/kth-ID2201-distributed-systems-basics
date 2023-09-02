@@ -1,5 +1,10 @@
+.PHONY: compile
+compile: file =
 compile:
-	erlc hello.erl
+	erlc $(file).erl
 
-run:
+run_hello_world:
 	erl -noshell -s hello world -s init stop
+
+shell:
+	erl
