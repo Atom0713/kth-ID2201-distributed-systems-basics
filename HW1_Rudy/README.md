@@ -20,5 +20,14 @@ Structure : **Method SP Request-URI SP HTTP-version CRLF**
 2. Accept incoming request - open communication channel with the Client
 3. Receive input from the open connection
 4. Send back reply if needed
-5. Close receiving connection
+5. Close connection
 6. Close listening socket
+
+## Testing server
+### 1. Start server
+a. In terminal open erl node **erl -name server@<host> -setcookie secret**
+b. Start rudy server: rudy:start(PORT).
+
+### 2. Start banchmarking client
+a. In teminal open erl node **erl -name test@<host> -setcookie secret**
+b. Start benchmarking: test:bench(HOST, PORT, <number_of_requests>).
