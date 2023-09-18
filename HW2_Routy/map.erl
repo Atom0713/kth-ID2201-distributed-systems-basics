@@ -14,7 +14,6 @@ update(Node, Links, Map) ->
             lists:append([{Node, Links}], Map)
     end.
 
-
 reachable(Node, Map) ->
     % return list of directional links (Nodes) directly reacheable from this Node or false.
     case lists:keyfind(Node, 1 , Map) of
@@ -26,7 +25,8 @@ reachable(Node, Map) ->
 
 all_nodes(Map) ->
     % return list of all nodes in the Map
-    extract_all_nodes(Map).
+    Set = sets:from_list(extract_all_nodes(Map)),
+    sets:to_list(Set).
 
 
 extract_all_nodes([]) ->
