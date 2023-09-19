@@ -14,6 +14,6 @@ update(Node, N, History) ->
                 false ->
                     old
             end;
-        false -> 
-            notfound
+        false ->
+            update(Node, N, [{Node, N}])
     end.
