@@ -33,5 +33,4 @@ extract_all_nodes([]) ->
     [];
 extract_all_nodes([Item|RO]) ->
     {Node, Links} = Item,
-    Rest = extract_all_nodes(RO),
-    [Node] ++ Links ++ Rest.
+    [Node] ++ Links ++ extract_all_nodes(RO).
