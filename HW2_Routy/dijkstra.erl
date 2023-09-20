@@ -35,14 +35,6 @@ iterate(Sorted, Map, Table) ->
     case Sorted of
         [] ->
             Table;
-        [{Node, N, Gateway}] ->
-            case N == inf of
-                true ->
-                    Table;
-                false ->    
-                   %Reachable_nodes = map:reachable(Node, Map),
-                    [{Node, Gateway}]
-            end;
         [{Node, N, Gateway}|R1] ->
             case N == inf of
                 true ->
@@ -55,7 +47,7 @@ iterate(Sorted, Map, Table) ->
                         [_|_] ->
                             R2 = update_for_each_reachable_node(Reachable_nodes, Node, R1)
                     end,
-                    iterate(R2, Map, Table) ++[{Node, Gateway}]
+                    iterate(R2, Map, Table ++ [{Node, Gateway}])
             end
     end.
 update_for_each_reachable_node([], _, _) ->

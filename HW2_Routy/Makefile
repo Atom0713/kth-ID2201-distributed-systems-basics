@@ -8,5 +8,6 @@ compile:
 		erlc $$name; \
 	done
 
+routy: NAME=
 routy: compile
-	erl -name sweden@$(LOCALIP) -setcookie routy -connect_all false
+	erl -name $(NAME)@$(LOCALIP) -setcookie routy -connect_all false

@@ -17,11 +17,6 @@ init(Name) ->
 
 router(Name, N, Hist, Intf, Table, Map) ->
     receive
-        {message, Node, Msgs} ->
-            {ok, Gateway} = dijkstra:route(Node, Table),
-            {ok, Pid} = intf:lookup(Gateway, Intf),
-            Pid ! Msgs,
-            router(Name, N, Hist, Intf, Table, Map);
         {add, Node, Pid} ->
             Ref = erlang:monitor(process,Pid),
             Intf1 = intf:add(Node, Ref, Pid, Intf),
@@ -49,7 +44,7 @@ router(Name, N, Hist, Intf, Table, Map) ->
             io:format("~w: received message ~w ~n", [Name, Message]),
             router(Name, N, Hist, Intf, Table, Map);
         {route, To, From, Message} ->
-            io:format("~w: routing message (~w)", [Name, Message]),
+            io:format("~w: routing message (~w)~n", [Name, Message]),
             case dijkstra:route(To, Table) of
                 {ok, Gw} ->
                     case intf:lookup(Gw, Intf) of
@@ -65,6 +60,12 @@ router(Name, N, Hist, Intf, Table, Map) ->
         {send, To, Message} ->
             self() ! {route, To, Name, Message},
             router(Name, N, Hist, Intf, Table, Map);
+        {status, From} ->
+            From ! status,
+            router(Name, N, Hist, Intf, Table, Map);
+        status ->
+            pretty_print(Name, N, Hist, Intf, Table, Map),
+            router(Name, N, Hist, Intf, Table, Map);
         update ->
             Table1 = dijkstra:table(intf:list(Intf), Map),
             router(Name, N, Hist, Intf, Table1, Map);
@@ -72,11 +73,15 @@ router(Name, N, Hist, Intf, Table, Map) ->
             Message = {links, Name, N, intf:list(Intf)},
             intf:broadcast(Message, Intf),
             router(Name, N+1, Hist, Intf, Table, Map);
-        {status, From} ->
-            From ! {status, {Name, N, Hist, Intf, Table, Map}},
-            router(Name, N, Hist, Intf, Table, Map);
         stop -> ok
-
     end.
+
+pretty_print(Name, N, Hist, Intf, Table, Map) ->
+    io:format("Name: ~s~n", [Name]),
+    io:format("Hist: ~w~n", [Hist]),
+    io:format("Intf: ~w~n", [Intf]),
+    io:format("Table: ~w~n", [Table]),
+    io:format("Map: ~w~n", [Map]).
+    
 
 

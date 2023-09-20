@@ -3,7 +3,7 @@
 
 
 new(Name) ->
-    [{Name, inf}].
+    [{Name, -1}].
 
 update(Node, N, History) ->
     case lists:keyfind(Node, 1, History) of
@@ -15,5 +15,5 @@ update(Node, N, History) ->
                     old
             end;
         false ->
-            update(Node, N, [{Node, N}])
+            {new, [{Node, N}|History]}
     end.
