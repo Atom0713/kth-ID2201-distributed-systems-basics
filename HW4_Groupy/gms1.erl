@@ -9,7 +9,6 @@ init(Id, Master) ->
     leader(Id, Master, [], [Master]).
 
 start(Id, Grp) ->
-    io:format("start node ~n"),
     Self = self(),
     {ok, spawn_link(fun() -> init(Id, Grp, Self) end)}.
 
@@ -18,7 +17,6 @@ init(Id, Grp, Master) ->
     Grp ! {join, Master, Self},
     receive
         {view, [Leader|Slaves], Group} ->
-            io:format("Invited ~n"),
             Master ! {view, Group},
             slave(Id, Master, Leader, Slaves, Group)
     end.
@@ -29,9 +27,7 @@ leader(Id, Master, Slaves, Group) ->
         {mcast, Msg} ->
             % multicast to all peers
             % send to the application layer
-            io:format("ID: ~w mcast leader received Msg: ~w ~n", [Id, Msg]),
             bcast(Id, {msg, Msg}, Slaves),
-            io:format("ID: ~w leader ask Master ~n", [Id]),
             Master ! Msg,
             leader(Id, Master, Slaves, Group);
         {join, Wrk, Peer} ->
@@ -45,21 +41,18 @@ leader(Id, Master, Slaves, Group) ->
 
     end.
 
-bcast(Id, Msg, Slaves) ->
-    io:format("ID: ~w bcast Msg: ~wSlaves: ~w ~n", [Id, Msg, Slaves]),
+bcast(_, Msg, Slaves) ->
     lists:map(fun(Slave) -> Slave ! Msg end, Slaves).
 
 slave(Id, Master, Leader, Slaves, Group) ->
     receive
         {mcast, Msg} ->
-            io:format("ID: ~w mcast slave received Msg: ~w ~n", [Id, Msg]),
             Leader ! {mcast, Msg},
             slave(Id, Master, Leader, Slaves, Group);
         {join, Wrk, Peer} ->
             Leader ! {join, Wrk, Peer},
             slave(Id, Master, Leader, Slaves, Group);
         {msg, Msg} ->
-            io:format("ID: ~w slave received Msg: ~w ~n", [Id, Msg]),
             Master ! Msg,
             slave(Id, Master, Leader, Slaves, Group);
         {view, [Leader|Slaves2], Group2} ->
