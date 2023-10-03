@@ -22,40 +22,36 @@ start(Id, Module, Rnd, Peer, Sleep) ->
 
 init(Id, Module, Rnd, Peer, Sleep) ->
     {ok, Cast} = apply(Module, start, [Id, Peer]),
-    io:format("Got PID ~w~n", [Cast]),
     {ok, Color} = join(Id, Cast),
-    io:format("Got color ~n"),
     init_cont(Id, Rnd, Cast, Color, Sleep).
 
 % Wait for the first view to be delivered
 join(Id, Cast) ->
+    Timeout = 3000,
     receive
         {view, _} ->
-            io:format("ID: ~w view group ~n", [Id]),
             Ref = make_ref(),
             Cast ! {mcast, {state_request, Ref}},
             state(Id, Ref);
         {error, Reason} ->
             {error, Reason}
+        after Timeout ->
+            Cast ! {error, "no reply from leader"}
     end.
 % and then wait for the, state
 state(Id, Ref) ->
-    io:format("ID: ~w state machine started ~n", [Id]),
     receive
         {state_request, Ref} ->
-            io:format("ID: ~w state_request received ~n", [Id]),
             receive
                 {state, Ref, Color} ->
                     {ok, Color}
             end;
-        _ ->
-            io:format("Ignore ~n"),
+        _Ignore ->
             state(Id, Ref)
     end.
 % we're either the first worker or has joined an existing group, but
 % now we know everything to continue.
-init_cont(Id, Rnd, Cast, Color, Sleep) ->
-    io:format("ID: ~w start GUI worker~n", [Id]),
+init_cont(Id, _, Cast, Color, Sleep) ->
     Title = "Worker: " ++ integer_to_list(Id),
     Gui = gui:start(Title, self()),
     Gui ! {color, Color},
@@ -74,7 +70,6 @@ worker(Id, Cast, Color, Gui, Sleep) ->
             worker(Id, Cast, Color2, Gui, Sleep);
         %% Someone needs to know the state at this point
         {state_request, Ref} ->
-            io:format("ID: ~w worker state_request received ~n", [Id]),
             Cast ! {mcast, {state, Ref, Color}},
             worker(Id, Cast, Color, Gui, Sleep);
         %% A reply on a state request but we don't care
