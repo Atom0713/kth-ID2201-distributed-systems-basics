@@ -2,6 +2,7 @@
 -export([start/4, start/5]).
 -define(change, 20).
 -define(color, {0,0,0}).
+-define(timeout, 3000).
 % Start a worker given:
 % Id - a unique integer, only used for debugging
 % Module - the module we want to use, i.e. gms1
@@ -27,7 +28,6 @@ init(Id, Module, Rnd, Peer, Sleep) ->
 
 % Wait for the first view to be delivered
 join(Id, Cast) ->
-    Timeout = 3000,
     receive
         {view, _} ->
             Ref = make_ref(),
@@ -35,7 +35,7 @@ join(Id, Cast) ->
             state(Id, Ref);
         {error, Reason} ->
             {error, Reason}
-        after Timeout ->
+        after ?timeout ->
             Cast ! {error, "no reply from leader"}
     end.
 % and then wait for the, state
