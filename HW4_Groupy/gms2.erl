@@ -41,9 +41,6 @@ leader(Id, Master, Slaves, Group) ->
             ok
     end.
 
-bcast(_, Msg, Slaves) ->
-    lists:map(fun(Slave) -> Slave ! Msg end, Slaves).
-
 slave(Id, Master, Leader, Slaves, Group) ->
     receive
         {mcast, Msg} ->
@@ -64,7 +61,7 @@ slave(Id, Master, Leader, Slaves, Group) ->
             ok
     end.
 
-election(Id, Master, Slaves, Group) ->
+election(Id, Master, Slaves, [_|Group]) ->
     Self = self(),
     case Slaves of
         [Self|Rest] ->
@@ -74,4 +71,16 @@ election(Id, Master, Slaves, Group) ->
         [Leader|Rest] ->
             erlang:monitor(process, Leader),
             slave(Id, Master, Leader, Rest, Group)
+    end.
+
+bcast(Id, Msg, Nodes) ->
+    lists:map(fun(Node) -> Node ! Msg, crash(Id) end, Nodes).
+
+crash(Id) ->
+    case rand:uniform(100) of
+        100 ->
+            io:format("leader ~w: crash ~n", [Id]),
+            exit(no_luck);
+        _ ->
+            ok
     end.
